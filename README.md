@@ -12,6 +12,7 @@ Perfect for handling recurring tasks without blocking your `loop()`.
 - **Millisecond Precision**: Uses `std::chrono` for accurate timing
 - **Non-Blocking**: Keeps your `loop()` responsive
 - **Multiple Schedulers**: Run several tasks at different intervals
+- **ESP32 Hardware Timer**: `HwScheduler` for ISR-based ticks with deferred loop tasks
 - **Lightweight**: Minimal code, easy to integrate
 - **Simple API**: Just call `.run()` with your function
 
@@ -35,11 +36,15 @@ lib_deps =
 
 ### Manual File Placement
 
-1. Download the library files (`scheduler.h`, `scheduler.cpp`, `library.properties`)
+1. Download the library files (`scheduler.h`, `scheduler.cpp`, `HwScheduler.h`, `HwScheduler.cpp`, `library.properties`)
 2. Copy the **ArduinoTaskScheduler** folder to your Arduino libraries directory:
    - **Windows**: `Documents\Arduino\libraries\`
    - **Mac**: `Documents/Arduino/libraries/`
    - **Linux**: `~/Arduino/libraries/`
+
+## Scheduler (loop-based)
+
+Use `Scheduler` for tasks that can run from `loop()`.
 
 ### Example
 
@@ -63,3 +68,40 @@ void loop() {
   scheduler_2.run([]() { Serial.println("Task 2 executed at " + String(millis()) + " ms"); });
 }
 ```
+
+## HwScheduler (ESP32 hardware timer)
+
+`HwScheduler` uses an ESP32 hardware timer for a fixed base tick (default **100 ms**), independent of `loop()` load.
+
+- **ISR handlers** (`addIsrTask`, `addHybridTask`): must be `IRAM_ATTR` and ISR-safe (counters, flags only)
+- **Loop handlers** (`addLoopTask`, `addHybridTask`): deferred via `poll()` — safe for network, display, audio, etc.
+- Intervals must be an **exact multiple** of the base tick (e.g. 100, 1000, 10000, 60000 ms with a 100 ms tick)
+
+### Example
+
+```c++
+#include <Arduino.h>
+#include <HwScheduler.h>
+
+HwScheduler hwTimer(0, 100000); // timer 0, 100 ms tick
+volatile uint16_t fastCounter = 0;
+
+void IRAM_ATTR on100ms() {
+  fastCounter++;
+}
+
+void setup() {
+  Serial.begin(115200);
+
+  hwTimer.begin();
+  hwTimer.addIsrTask(100, on100ms);
+  hwTimer.addLoopTask(1000, []() { Serial.printf("1s task, counter=%u\n", fastCounter); });
+  hwTimer.addLoopTask(10000, []() { Serial.println("10s watchdog"); });
+}
+
+void loop() {
+  hwTimer.poll(); // run deferred tasks
+}
+```
+
+See also `examples/HwScheduler_Basic/`.
