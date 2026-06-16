@@ -1,4 +1,4 @@
-# Arduino Task Scheduler - Lightweight Library
+# ArduinoTaskScheduler - Lightweight Library
 
 [![Arduino Library](https://www.ardu-badge.com/badge/ArduinoTaskScheduler.svg?)](https://www.ardu-badge.com/ArduinoTaskScheduler)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -17,24 +17,42 @@ Perfect for handling recurring tasks without blocking your `loop()`.
 
 ## Installation
 
+### PlatformIO
+
+Add to `platformio.ini`:
+
+```ini
+lib_deps =
+    https://github.com/joruf/Task-Scheduler.git
+```
+
+Or use a local checkout (path relative to your project):
+
+```ini
+lib_deps =
+    file://../../GitHub/task-scheduler
+```
+
 ### Manual File Placement
-1. Download the library files (`scheduler.h`, `scheduler.cpp`)
+
+1. Download the library files (`scheduler.h`, `scheduler.cpp`, `library.properties`)
 2. Copy the **ArduinoTaskScheduler** folder to your Arduino libraries directory:
    - **Windows**: `Documents\Arduino\libraries\`
    - **Mac**: `Documents/Arduino/libraries/`
    - **Linux**: `~/Arduino/libraries/`
 
 ### Example
+
 ```c++
 #include <Arduino.h>
-#include "scheduler.h"
+#include <scheduler.h>
 
 // Create two scheduler instances
 Scheduler scheduler_1(500);   // executes every 500 ms
 Scheduler scheduler_2(1000);  // executes every 1000 ms
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
   while (!Serial) { ; }
   Serial.println("Scheduler test started");
 }
@@ -44,6 +62,4 @@ void loop() {
 
   scheduler_2.run([]() { Serial.println("Task 2 executed at " + String(millis()) + " ms"); });
 }
-
 ```
-
