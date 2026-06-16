@@ -24,7 +24,7 @@ Add to `platformio.ini`:
 
 ```ini
 lib_deps =
-    https://github.com/joruf/Task-Scheduler.git
+    https://github.com/joruf/task-scheduler.git
 ```
 
 Or use a local checkout (path relative to your project):
